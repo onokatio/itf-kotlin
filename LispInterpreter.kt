@@ -67,31 +67,30 @@ class LispParser {
     var index = 0
     fun parse(tokens: List<String>): ParseResult {
         if (this.index >= tokens.size) {
-            return ParseResult(null, SyntaxError.UnexpectedEos)
+            return SyntaxError.UnexpectedEos
         }
         val tokenString = tokens[this.index]
         if (tokenString == Symbols.S_CLOSE) {
-            return ParseResult(null, SyntaxError.UnexpectedToken(tokenString))
+            return SyntaxError.UnexpectedToken(tokenString)
         }
 
         return when {
             tokenString != Symbols.S_OPEN -> {
                 this.index += 1
-                ParseResult(ParsedTokens.SingleToken(tokenString), null)
+                ParsedTokens.SingleToken(tokenString)
             }
 
             tokens[this.index + 1] == Symbols.S_CLOSE -> {
                 this.index += 2
-                ParseResult(ParsedTokens.TokenGroup(listOf()), null)
+                ParsedTokens.TokenGroup(listOf())
             }
 
             else -> {
                 this.index += 1
                 val parseResult = parse(tokens)
-                if (parseResult.tokens != null && parseResult.error == null) {
-                    parseTokensInParentheses(parseResult.tokens, tokens)
-                } else {
-                    parseResult
+                when(parseResult) {
+                    is ParsedTokens -> return parseTokensInParentheses(parseResult, tokens)
+                    is SyntaxError -> return parseResult
                 }
             }
         }
@@ -106,20 +105,22 @@ class LispParser {
 
         while (tokens0[indexInParentheses] != Symbols.S_CLOSE) {
             if (indexInParentheses >= tokens0.size) {
-                return ParseResult(null, SyntaxError.UnexpectedEos)
+                return SyntaxError.UnexpectedEos
             }
 
             this.index = indexInParentheses
             val recursiveResult = parse(tokens0)
-            if (recursiveResult.tokens == null || recursiveResult.error != null) {
-                return recursiveResult
+            when (recursiveResult) {
+                is SyntaxError -> return recursiveResult
+                is ParsedTokens -> {
+                    indexInParentheses = this.index
+                    tokensInParentheses.add(recursiveResult)
+                }
             }
 
-            indexInParentheses = this.index
-            tokensInParentheses.add(recursiveResult.tokens)
         }
         this.index = indexInParentheses + 1
-        return ParseResult(ParsedTokens.TokenGroup(tokensInParentheses), null)
+        return ParsedTokens.TokenGroup(tokensInParentheses)
     }
 }
 
@@ -146,7 +147,7 @@ object Symbols {
  * This structure consists of a single token type and a token group type.
  * A token group has models of the same type recursively.
  */
-sealed interface ParsedTokens {
+sealed interface ParsedTokens : ParseResult{
     class TokenGroup(val tokens: List<ParsedTokens>) : ParsedTokens {
         override fun toString(): String =
             tokens.joinToString(separator = ", ", prefix = "[", postfix = "]")
@@ -157,7 +158,7 @@ sealed interface ParsedTokens {
     }
 }
 
-sealed interface SyntaxError {
+sealed interface SyntaxError : ParseResult {
     object UnexpectedEos : SyntaxError
     class UnexpectedToken(val token: String) : SyntaxError
 }
@@ -177,6 +178,5 @@ class ParseState(
 /**
  * [tokens] or [error] is non-null exclusively.
  */
-class ParseResult(val tokens: ParsedTokens?, val error: SyntaxError?) {
-    override fun toString(): String = tokens?.toString() ?: error?.toString() ?: ""
+sealed interface ParseResult {
 }
