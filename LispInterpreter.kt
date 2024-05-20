@@ -8,22 +8,25 @@ fun main() {
     interpreter.interpret("((1 2) ((2) 3))")
 }
 
+/**
+ * Tokenize list string from a LISP code by reverse order.
+ */
 class LispTokenizer (val lispText: String) {
     fun tokenize(): List<String> {
-        val text = this.lispText
         val tokens: MutableList<String> = mutableListOf()
         var startIndex = 0
         var endIndex = 0
 
-        while (endIndex < text.length) {
-            val char = text[endIndex]
+        while (endIndex < lispText.length) {
+            val char = lispText[endIndex]
+            // Skip single token because it is already token
             if (!Symbols.singleCharToken(char)) {
                 endIndex += 1
                 continue
             }
 
             if (startIndex < endIndex) {
-                tokens += text.substring(startIndex, endIndex)
+                tokens += lispText.substring(startIndex, endIndex)
             }
             if (char != Symbols.SPACE) {
                 tokens += char.toString()
@@ -32,8 +35,8 @@ class LispTokenizer (val lispText: String) {
             endIndex += 1
         }
 
-        if (startIndex < text.length) {
-            tokens += text.substring(startIndex)
+        if (startIndex < lispText.length) {
+            tokens += lispText.substring(startIndex)
         }
         return tokens
     }
@@ -52,17 +55,17 @@ class LispTokenizer (val lispText: String) {
  */
 class LispInterpreter {
 
-    private val state = ParseState("", 0)
-
     fun interpret(lispText: String) {
         val tokens = LispTokenizer(lispText).tokenize()
-        state.index = 0
         val parseResult = LispParser().parse(tokens)
         // TODO: Implement `evaluation` logic. Currently, just show the parse result.
         println(parseResult)
     }
 }
 
+/**
+ * Read and parse Lisp token recursive and create Abstract Syntac Tree.
+ */
 class LispParser {
     var index = 0
     fun parse(tokens: List<String>): ParseResult {
