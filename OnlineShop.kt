@@ -132,7 +132,7 @@ class ShopItemPresenter(
 /**
  * 「商品の購入」リクエストを送出するクラス。
  *
- * 購入する商品を [setCurrentItemProvider] によって指定し、[purchase] でその商品購入のリクエストを送る。
+ * 購入する商品を [purchase] で購入のリクエストを送る。
  */
 class PurchaseRequester {
     fun purchase(targetItem: ShopItemModel) {
