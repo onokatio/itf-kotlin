@@ -35,7 +35,7 @@ interface LocalStore<K> {
 /**
  * [ShopItemModel] を保存・取得する [LocalStore]。
  */
-class ShopItemStore(val commentStore: LocalStore<CommentId>) : LocalStore<ItemId> {
+class ShopItemStore : LocalStore<ItemId> {
     override fun query(key: ItemId): ShopItemModel? {
         ...
     }
