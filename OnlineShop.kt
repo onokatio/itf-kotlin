@@ -91,25 +91,25 @@ class ShopItemPresenter(
         layout.purchaseButton.setButtonCallback { purchaseRequester.purchase() }
     }
 
+    fun CreateCommentElementById(commentId: CommentId): UiModel  {
+        val comment = shopItemStore.commentStore.query(
+            commentId
+        ) as CommentModel
+        return createCommentUiElement(comment)
+    }
     fun showItem(itemId: ItemId) {
         val itemModel = shopItemStore.query(itemId)
         if (itemModel == null) {
             showErrorLayout()
             return
         }
+        val commentElements = itemModel.commentIds.map { commentId -> CreateCommentElementById(commentId)}
+
         layout.itemNameUiElement.text = itemModel.name
         layout.itemDescriptionUiElement.text = itemModel.explanationText
         layout.itemPictureView.picture = IMAGE_LOADER.getImage(itemModel.pictureUri) { HTTP_CLIENT }
         layout.commentUiElementContainer.removeAll()
-        itemModel.commentIds.map { commentId ->
-            layout.commentUiElementContainer.addUiElement(
-                createCommentUiElement(
-                    shopItemStore.commentStore.query(
-                        commentId
-                    ) as CommentModel
-                )
-            )
-        }
+        layout.commentUiElementContainer.addUiElements(commentElements)
         currentShownItem = itemModel
     }
 
