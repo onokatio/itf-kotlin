@@ -93,22 +93,22 @@ class ShopItemPresenter(
 
     fun showItem(itemId: ItemId) {
         val itemModel = shopItemStore.query(itemId)
-        if (itemModel != null) {
-            layout.itemNameUiElement.text = itemModel.name
-            layout.itemDescriptionUiElement.text = itemModel.explanationText
-            layout.itemPictureView.picture = IMAGE_LOADER.getImage(itemModel.pictureUri) { HTTP_CLIENT }
-            layout.commentUiElementContainer.removeAll()
-            itemModel.commentIds.map { commentId ->
-                layout.commentUiElementContainer.addUiElement(
-                    createCommentUiElement(
-                        shopItemStore.commentStore.query(
-                            commentId
-                        ) as CommentModel
-                    )
-                )
-            }
-        } else {
+        if (itemModel == null) {
             showErrorLayout()
+            return
+        }
+        layout.itemNameUiElement.text = itemModel.name
+        layout.itemDescriptionUiElement.text = itemModel.explanationText
+        layout.itemPictureView.picture = IMAGE_LOADER.getImage(itemModel.pictureUri) { HTTP_CLIENT }
+        layout.commentUiElementContainer.removeAll()
+        itemModel.commentIds.map { commentId ->
+            layout.commentUiElementContainer.addUiElement(
+                createCommentUiElement(
+                    shopItemStore.commentStore.query(
+                        commentId
+                    ) as CommentModel
+                )
+            )
         }
         currentShownItem = itemModel
     }
