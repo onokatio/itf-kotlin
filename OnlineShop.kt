@@ -81,6 +81,7 @@ val IMAGE_LOADER: ImageLoader = ImageLoader(500)
 class ShopItemPresenter(
     private val layout: ShopItemLayout,
     private val shopItemStore: ShopItemStore
+    private val commentStore: commentStore
 ) {
     private var currentShownItem: ShopItemModel? = null
 
@@ -88,12 +89,6 @@ class ShopItemPresenter(
         layout.purchaseButton.setButtonCallback { purchaseRequester.purchase(currentShownItem) }
     }
 
-    fun CreateCommentElementById(commentId: CommentId): UiModel  {
-        val comment = shopItemStore.commentStore.query(
-            commentId
-        ) as CommentModel
-        return createCommentUiElement(comment)
-    }
     fun showItem(itemId: ItemId) {
         val itemModel = shopItemStore.query(itemId)
         if (itemModel == null) {
@@ -119,6 +114,14 @@ class ShopItemPresenter(
 
         showErrorDialog()
     }
+
+    fun CreateCommentElementById(commentId: CommentId): UiModel  {
+        val comment = commentStore.query(
+            commentId
+        ) as CommentModel
+        return createCommentUiElement(comment)
+    }
+
 
     private fun createCommentUiElement(commentModel: CommentModel): UiElement { ... }
 
