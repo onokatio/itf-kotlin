@@ -80,15 +80,12 @@ val IMAGE_LOADER: ImageLoader = ImageLoader(500)
  */
 class ShopItemPresenter(
     private val layout: ShopItemLayout,
-    private val purchaseRequester: PurchaseRequester,
     private val shopItemStore: ShopItemStore
 ) {
     private var currentShownItem: ShopItemModel? = null
 
     init {
-        purchaseRequester.setCurrentItemProvider { currentShownItem }
-
-        layout.purchaseButton.setButtonCallback { purchaseRequester.purchase() }
+        layout.purchaseButton.setButtonCallback { purchaseRequester.purchase(currentShownItem) }
     }
 
     fun CreateCommentElementById(commentId: CommentId): UiModel  {
@@ -138,14 +135,8 @@ class ShopItemPresenter(
  * 購入する商品を [setCurrentItemProvider] によって指定し、[purchase] でその商品購入のリクエストを送る。
  */
 class PurchaseRequester {
-    private var currentItemProvider: () -> ShopItemModel? = { null }
-
-    fun setCurrentItemProvider(provider: () -> ShopItemModel?) {
-        currentItemProvider = provider
-    }
-
-    fun purchase() {
-        val currentItem = currentItemProvider()
+    fun purchase(targetItem: ShopItemModel) {
+        val currentItem = targetItem
         ...
     }
 }
