@@ -35,7 +35,7 @@ interface LocalStore<K> {
 /**
  * [ShopItemModel] を保存・取得する [LocalStore]。
  */
-class ShopItemStore(val commentStore: LocalStore<CommentId>) : LocalStore<ItemId> {
+class ShopItemStore : LocalStore<ItemId> {
     override fun query(key: ItemId): ShopItemModel? {
         ...
     }
@@ -80,36 +80,28 @@ val IMAGE_LOADER: ImageLoader = ImageLoader(500)
  */
 class ShopItemPresenter(
     private val layout: ShopItemLayout,
-    private val purchaseRequester: PurchaseRequester,
     private val shopItemStore: ShopItemStore
+    private val commentStore: commentStore
 ) {
     private var currentShownItem: ShopItemModel? = null
 
     init {
-        purchaseRequester.setCurrentItemProvider { currentShownItem }
-
-        layout.purchaseButton.setButtonCallback { purchaseRequester.purchase() }
+        layout.purchaseButton.setButtonCallback { purchaseRequester.purchase(currentShownItem) }
     }
 
     fun showItem(itemId: ItemId) {
         val itemModel = shopItemStore.query(itemId)
-        if (itemModel != null) {
-            layout.itemNameUiElement.text = itemModel.name
-            layout.itemDescriptionUiElement.text = itemModel.explanationText
-            layout.itemPictureView.picture = IMAGE_LOADER.getImage(itemModel.pictureUri) { HTTP_CLIENT }
-            layout.commentUiElementContainer.removeAll()
-            itemModel.commentIds.map { commentId ->
-                layout.commentUiElementContainer.addUiElement(
-                    createCommentUiElement(
-                        shopItemStore.commentStore.query(
-                            commentId
-                        ) as CommentModel
-                    )
-                )
-            }
-        } else {
+        if (itemModel == null) {
             showErrorLayout()
+            return
         }
+        val commentElements = itemModel.commentIds.map { commentId -> CreateCommentElementById(commentId)}
+
+        layout.itemNameUiElement.text = itemModel.name
+        layout.itemDescriptionUiElement.text = itemModel.explanationText
+        layout.itemPictureView.picture = IMAGE_LOADER.getImage(itemModel.pictureUri) { HTTP_CLIENT }
+        layout.commentUiElementContainer.removeAll()
+        layout.commentUiElementContainer.addUiElements(commentElements)
         currentShownItem = itemModel
     }
 
@@ -123,6 +115,14 @@ class ShopItemPresenter(
         showErrorDialog()
     }
 
+    fun CreateCommentElementById(commentId: CommentId): UiModel  {
+        val comment = commentStore.query(
+            commentId
+        ) as CommentModel
+        return createCommentUiElement(comment)
+    }
+
+
     private fun createCommentUiElement(commentModel: CommentModel): UiElement { ... }
 
     private fun showErrorDialog() { ... }
@@ -135,17 +135,11 @@ class ShopItemPresenter(
 /**
  * 「商品の購入」リクエストを送出するクラス。
  *
- * 購入する商品を [setCurrentItemProvider] によって指定し、[purchase] でその商品購入のリクエストを送る。
+ * 購入する商品を [purchase] で購入のリクエストを送る。
  */
 class PurchaseRequester {
-    private var currentItemProvider: () -> ShopItemModel? = { null }
-
-    fun setCurrentItemProvider(provider: () -> ShopItemModel?) {
-        currentItemProvider = provider
-    }
-
-    fun purchase() {
-        val currentItem = currentItemProvider()
+    fun purchase(targetItem: ShopItemModel) {
+        val currentItem = targetItem
         ...
     }
 }
